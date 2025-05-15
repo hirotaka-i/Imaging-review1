@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Define the base directory where patient data is stored
+base_dir="/mnt/c/Users/ACER/OneDrive/Desktop/braah_project/DAT_SCAN-original"
+mask_template="/mnt/c/Users/ACER/OneDrive/Desktop/braah_project/masks/striatum_t1_orientation.nii.gz"
+
+# Loop through all patient folders
+for patient_dir in "$base_dir"/*; do
+    if [ -d "$patient_dir" ]; then
+        patient_id=$(basename "$patient_dir")
+        echo "Processing Patient: $patient_id"
+
+        # Loop through DAT1 and DAT2
+        for dat_folder in "$patient_dir"/DAT1 "$patient_dir"/DAT2; do
+            if [ -d "$dat_folder" ]; then
+                echo "Processing: $dat_folder"
+
+                # Find MRI images that start with 'wo'
+                for t1_image in "$dat_folder"/wo*.nii*; do
+                    if [ -f "$t1_image" ]; then
+                        t1_filename=$(basename "$t1_image")
+                        output_dir="$dat_folder/Striatum_Regions_${t1_filename%%.*}"
+                        mkdir -p "$output_dir"
+                        echo "Extracting striatum regions for $t1_filename"
+
+                        # Loop through each subregion (1 to 7)
+                         for i in {1..7}; do
+                            echo "Extracting Subregion $i..."
+
+                            # Extract the subregion mask (thresholding)
+                            subregion_mask="$output_dir/striatum_subregion_${i}.nii.gz"
+                            fslmaths "$mask_template" -thr $i -uthr $i -bin "$subregion_mask"
+
+                            # Align the striatum subregion mask to T1 image
+                            aligned_mask="$output_dir/striatum_subregion_${i}_aligned.nii.gz"
+                            flirt -in "$subregion_mask" \
+                                  -ref "$t1_image" \
+                                  -out "$aligned_mask" \
+                                  -applyxfm -usesqform -interp nearestneighbour
+
+                            # **Ensure the aligned mask is binary**
+                            fslmaths "$aligned_mask" -bin "$aligned_mask"
+
+                            # Apply the corrected binary mask to the T1 image
+                            final_mask="$output_dir/${patient_id}_T1_striatum_subregion_bin_${i}.nii.gz"
+                            fslmaths "$t1_image" -mas "$aligned_mask" "$final_mask"
+
+                            # **Ensure the final mask is binary**
+                            fslmaths "$final_mask" -bin "$final_mask"
+                        done
+                        echo "✅ All 7 subregions extracted for $t1_filename"
+                    fi
+                done
+            fi
+        done
+    fi
+done
+
+echo "✅ Processing completed for all patients!"
