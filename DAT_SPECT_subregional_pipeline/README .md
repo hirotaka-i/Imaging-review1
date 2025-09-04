@@ -1,6 +1,6 @@
-PPMI DAT‑SPECT Processing & SBR Pipeline
+ DAT‑SPECT Processing & SBR Pipeline
 
-This repository contains MATLAB scripts for preprocessing PPMI DaT-SPECT scans and computing striatal binding ratios (SBR). The pipeline includes co-registration to an MNI DaT template (SPM12), reslicing ROI masks to each subject’s DaT-SPECT grid, and SBR computation using the superior longitudinal fasciculus (SLF; white-matter) as the reference region, with the occipital mean also reported for comparison with prior analyses.
+This repository contains MATLAB scripts for preprocessing  DaT-SPECT scans and computing striatal binding ratios (SBR). The pipeline includes co-registration to an MNI DaT template (SPM12), reslicing ROI masks to each subject’s DaT-SPECT grid, and SBR computation using the superior longitudinal fasciculus (SLF; white-matter) as the reference region, with the occipital mean also reported for comparison with prior analyses.
 
 Matlab
 % In MATLAB (paths are already set in the scripts; update if needed):
